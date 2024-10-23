@@ -72,14 +72,12 @@ int main(){
 
     //Planarity check in O(n). Found a C# implementation that has worst case O(n^2) implementation.
     //-------//
+
     //if No, print not possible and end early.
 
     //vector of non-isomorphic connected components of G using Hopcroft-Wong (O(n)). No implementations found, might have to do it on our own.
     //------//
 
-    for(auto val: edges){
-        cout<<val.first<<" "<<val.second<<endl;
-    }
 
 
     return 0;
