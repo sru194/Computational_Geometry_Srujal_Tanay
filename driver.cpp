@@ -50,6 +50,11 @@ bool edge_input(int vertices,string fileName,vector<pair<int,int>>& edges){
 
 
 int main(){
+
+    cout<<"Welcome to the program."<<endl<<"Enter the graph dimensions you want with a space between them";
+    int k,r;
+    cin>>k>>r;
+
     int vertices;
     cout<<"Enter the number of vertices."<<endl;
     cin>>vertices;
