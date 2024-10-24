@@ -63,6 +63,10 @@ int main(){
         cerr<<"Error: Enter positive number of vertices."<<endl;
         return -1;
     }
+    if(vertices > k*r){
+        cerr<<"Error: vertices greater than maximum k*r graph can include."<<endl;
+        return -1;
+    }
 
     //for now, we expect edges in (a,b) format.
 
