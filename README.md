@@ -1,7 +1,7 @@
 # Computational_Geometry_Srujal_Tanay
 Implementation of FPT Algorithm for kXr Grid Embedding Problem
 
---> In the project folder to run the program,use command:
+--> In the project folder to run the program,use command(Generalized commands just use brew/sudo/vcpkg according to your system):
   1) First install boost library using: brew install boost
   2) Then install graphviz using      : brew install graphviz
   3) Then run the files using :
