@@ -20,6 +20,6 @@ typedef adjacency_list<vecS, vecS, undirectedS,
 typedef vector<graph_traits<Graph>::edge_descriptor> kuratowski_edges_t;
 
 // Function declarations
-bool check_planarity(int vertices, const vector<pair<int, int>>& edges);
+int check_planarity(int vertices, const vector<pair<int, int>>& edges);
 
 #endif 
