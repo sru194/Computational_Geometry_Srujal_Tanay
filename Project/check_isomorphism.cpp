@@ -107,11 +107,13 @@ vector<vector<int>> findNonIsomorphicComponents(vector<vector<int>>& adj, int V)
     return non_isomorphic;
 }
 
-void nonIsoConnectedComponents(int vertices, const vector<pair<int, int>>& edges){
+int nonIsoConnectedComponents(int vertices, const vector<pair<int, int>>& edges){
     vector<vector<int>> adj = convertToAdjacencyList(vertices,edges);
     vector<vector<int>> result = findNonIsomorphicComponents(adj, vertices);
     
     cout << "\nFound " << result.size() << " non-isomorphic components:" << endl;
+
+    int cnt = 0;
     for(const auto& component : result) {
         cout << "Component: ";
         for(int v : component) {
@@ -119,15 +121,23 @@ void nonIsoConnectedComponents(int vertices, const vector<pair<int, int>>& edges
         }
         cout << "\nEdges: ";
         set<pair<int, int>> printed_edges; // To avoid printing duplicate edges
+        Graph g;
         for(int v : component) {
             for(int u : adj[v]) {
-                if(find(component.begin(), component.end(), u) != component.end() && 
+                if(find(component.begin(), component.end(), u) != component.end() &&
                    printed_edges.find({min(u,v), max(u,v)}) == printed_edges.end()) {
                     cout << "(" << v << "," << u << ") ";
                     printed_edges.insert({min(u,v), max(u,v)});
+                    add_edge(min(u,v),max(u,v),g);
                 }
             }
         }
+        cnt++;
+        ostringstream filename;
+        filename << "graph" << cnt << ".dot";
+        ofstream file(filename.str());
+        write_graphviz(file, g);
         cout << "\n\n";
     }
+    return result.size();
 }
