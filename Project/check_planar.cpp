@@ -1,6 +1,6 @@
 #include "check_planar.h"
 
-bool check_planarity(int vertices, const vector<pair<int, int>>& graph) {
+int check_planarity(int vertices, const vector<pair<int, int>>& graph) {
     // Initialize the Boost graph with the given number of vertices
     Graph g(vertices);
 
@@ -17,30 +17,27 @@ bool check_planarity(int vertices, const vector<pair<int, int>>& graph) {
         put(e_index, *ei, edge_count++);
     }
 
+    //Graph drawing in graph.dot file
+    ofstream file("graph.dot");
+    write_graphviz(file, g);
+
     // Check for planarity
     kuratowski_edges_t kuratowski_edges;
     if (boyer_myrvold_planarity_test(
             boyer_myrvold_params::graph = g,
             boyer_myrvold_params::kuratowski_subgraph = back_inserter(kuratowski_edges))) {
         cout << "Input graph is planar" << endl;
-
-        ofstream file("graph.dot");
-        write_graphviz(file, g);
-        cout << "Planar embedding written to graph.dot." << endl;
-
-        return true;
+        return -1;
     } 
     else {
         cout << "Input graph is not planar" << endl;
         cout << "Edges in the Kuratowski subgraph: ";
+        int cnt = 0;
         for (auto edge : kuratowski_edges) {
             cout << "(" << source(edge, g) << ", " << target(edge, g) << ") ";
+            cnt++;
         }
+        return cnt;
         cout << endl;
-
-        ofstream file("graph.dot");
-        write_graphviz(file, g);
-        cout << "Graph written to graph.dot." << endl;
-        return false;
     }
 }
