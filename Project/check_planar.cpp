@@ -40,4 +40,5 @@ int check_planarity(int vertices, const vector<pair<int, int>>& graph) {
         return cnt;
         cout << endl;
     }
+    return 0;
 }
