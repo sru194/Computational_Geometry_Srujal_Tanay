@@ -1,167 +1,100 @@
 #include "check_isomorphism.h"
 
-//convert to adjacency list
-vector<vector<int>> convertToAdjacencyList(int vertices, const vector<pair<int, int>>& edges){
-    vector<vector<int>> adj(vertices);
-    for(auto edge: edges){
-        adj[edge.first].push_back(edge.second);
-        adj[edge.second].push_back(edge.first);
-    }
-    return adj;
-}
-
-// Function to perform DFS and collect components
-void DFS(int v, vector<vector<int>>& adj, vector<bool>& visited, vector<int>& component) {
-    visited[v] = true;
-    component.push_back(v);
-    
-    for(int u : adj[v]) {
-        if(!visited[u]) {
-            DFS(u, adj, visited, component);
-        }
+// Convert edge list to Boost graph
+void edge_list_to_boost_graph(const vector<pair<int, int>>& edge, Graph &g) {
+    for (const auto& e : edge) {
+        add_edge(e.first, e.second, g);
     }
 }
 
-// Function to get all connected components
-vector<vector<int>> getConnectedComponents(vector<vector<int>>& adj, int V) {
-    vector<bool> visited(V, false);
-    vector<vector<int>> components;
-    
-    for(int v = 0; v < V; v++) {
-        if(!visited[v]) {
-            vector<int> component;
-            DFS(v, adj, visited, component);
-            components.push_back(component);
-        }
-    }
-    return components;
+// Function to check isomorphism between two graphs
+bool are_isomorphic(const Graph& g1, const Graph& g2) {
+    vector<vertex_desc> f(num_vertices(g2));
+    return isomorphism(g1, g2, isomorphism_map(make_iterator_property_map(f.begin(), get(vertex_index, g1), f[0])));
 }
 
-// Function to get canonical labeling for a component
-vector<int> getCanonicalLabeling(const vector<int>& component, vector<vector<int>>& adj) {
-    int n = component.size();
-    vector<int> label(n);
-    vector<vector<bool>> subgraph(n, vector<bool>(n, false));
-    
-    // Create adjacency matrix for the component
-    for(int i = 0; i < n; i++) {
-        for(int j = 0; j < n; j++) {
-            int v1 = component[i];
-            int v2 = component[j];
-            auto it = find(adj[v1].begin(), adj[v1].end(), v2);
-            if(it != adj[v1].end()) {
-                subgraph[i][j] = subgraph[j][i] = true;
-            }
-        }
-    }
-    
-    // Initialize partition
-    vector<int> partition(n, 0);
-    
-    // Refine partition until stable
-    bool changed = true;
-    while(changed) {
-        changed = false;
-        vector<int> new_partition = partition;
-        
-        for(int i = 0; i < n; i++) {
-            vector<int> signature;
-            for(int j = 0; j < n; j++) {
-                if(subgraph[i][j]) {
-                    signature.push_back(partition[j]);
-                }
-            }
-            sort(signature.begin(), signature.end());
-            
-            int hash = 0;
-            for(int s : signature) {
-                hash = hash * 31 + s;
-            }
-            new_partition[i] = hash;
-        }
-        
-        if(new_partition != partition) {
-            changed = true;
-            partition = new_partition;
-        }
-    }
-    
-    return partition;
-}
-
-// Function to find non-isomorphic components
-vector<vector<int>> findNonIsomorphicComponents(vector<vector<int>>& adj, int V) {
-    vector<vector<int>> components = getConnectedComponents(adj, V);
-    vector<vector<int>> non_isomorphic;
-    map<vector<int>, bool> seen;
-    
-    for(const auto& component : components) {
-        vector<int> canonical = getCanonicalLabeling(component, adj);
-        
-        if(!seen[canonical]) {
-            seen[canonical] = true;
-            non_isomorphic.push_back(component);
-        }
-    }
-    
-    return non_isomorphic;
-}
-
-void custom_write_graphviz(const vector<int>& vertices, const set<pair<int, int>>& edges, const string& filename) {
+// Custom function to write graph in DOT format
+void custom_write_graphviz(const string& filename, const Graph& g, const std::unordered_map<vertex_desc, int>& original_ids) {
     ofstream file(filename);
     if (!file) {
         cerr << "Error opening file for writing!" << endl;
         return;
     }
-    
-    // Start the DOT format
+
     file << "graph G {\n";
+    cout << "Component: ";
     
-    // Write the vertices (nodes)
-    for (int v : vertices) {
-        file << "    " << v << ";\n";
+    for (auto vp = vertices(g); vp.first != vp.second; ++vp.first) {
+        int original_id = original_ids.at(*vp.first); // Use the original ID from the map
+        file << "    " << original_id << ";\n";
+        cout << original_id << " ";
     }
-    
-    // Write the edges
-    for (const auto& e : edges) {
-        file << "    " << e.first << " -- " << e.second << ";\n";
+
+    cout << "\nEdges: ";
+    for (auto ep = edges(g); ep.first != ep.second; ++ep.first) {
+        int source_id = original_ids.at(source(*ep.first, g));
+        int target_id = original_ids.at(target(*ep.first, g));
+        file << "    " << source_id << " -- " << target_id << ";\n";
+        cout << "(" << source_id << "," << target_id << ") ";
     }
-    
-    // End the DOT format
+
     file << "}\n";
-    
     file.close();
+    cout<<"\n\n\n";
 }
 
-int nonIsoConnectedComponents(int vertices, const vector<pair<int, int>>& edges){
-    vector<vector<int>> adj = convertToAdjacencyList(vertices,edges);
-    vector<vector<int>> result = findNonIsomorphicComponents(adj, vertices);
-    
-    cout << "\nFound " << result.size() << " non-isomorphic components:" << endl;
+// Function to find non-isomorphic connected components
+int nonIsoConnectedComponents(int vertices, const vector<pair<int, int>>& edge) {
+    Graph g(vertices);
+    edge_list_to_boost_graph(edge, g);
 
-    int cnt = 0;
-    for(const auto& component : result) {
-        cout << "Component: ";
-        for(int v : component) {
-            cout << v << " ";
-        }
-        cout << "\nEdges: ";
-        set<pair<int, int>> printed_edges; // To avoid printing duplicate edges
-        for(int v : component) {
-            for(int u : adj[v]) {
-                if(find(component.begin(), component.end(), u) != component.end() &&
-                   printed_edges.find({min(u,v), max(u,v)}) == printed_edges.end()) {
-                    cout << "(" << v << "," << u << ") ";
-                    printed_edges.insert({min(u,v), max(u,v)});
-                }
+    vector<int> component(num_vertices(g));
+    int num_components = connected_components(g, &component[0]);
+
+    vector<Graph> non_isomorphic_components;
+    vector<Graph> all_components;
+    vector<std::unordered_map<vertex_desc, int>> original_id_maps; // Store original IDs for each subgraph
+
+    for (int i = 0; i < num_components; ++i) {
+        Graph subgraph;
+        std::unordered_map<vertex_desc, int> original_ids; // Map to store original IDs for this component
+        std::unordered_map<int, vertex_desc> vertex_map;
+
+        for (int j = 0; j < num_vertices(g); ++j) {
+            if (component[j] == i) {
+                vertex_desc v = add_vertex(subgraph);
+                original_ids[v] = j; // Store the original ID in the map
+                vertex_map[j] = v;
             }
         }
-        cout<<"\n";
-        cnt++;
 
-        string filename = "graph" + to_string(cnt) + ".dot";
-        custom_write_graphviz(component,printed_edges,filename);
-        cout << "\n\n";
+        for (auto e : make_iterator_range(edges(g))) {
+            int u = get(vertex_index, g, source(e, g));
+            int v = get(vertex_index, g, target(e, g));
+            if (component[u] == i && component[v] == i) {
+                add_edge(vertex_map[u], vertex_map[v], subgraph);
+            }
+        }
+
+        bool is_isomorphic = false;
+        for (const auto& existing_component : all_components) {
+            if (are_isomorphic(subgraph, existing_component)) {
+                is_isomorphic = true;
+                break;
+            }
+        }
+
+        if (!is_isomorphic) {
+            non_isomorphic_components.push_back(subgraph);
+            all_components.push_back(subgraph);
+            original_id_maps.push_back(original_ids); // Store the original ID map for this subgraph
+        }
     }
-    return result.size();
+
+    cout << "\nFound " << non_isomorphic_components.size() << " non-isomorphic components:" << endl;
+    for (int i = 0; i < non_isomorphic_components.size(); ++i) {
+        string filename = "graph" + to_string(i + 1) + ".dot";
+        custom_write_graphviz(filename, non_isomorphic_components[i], original_id_maps[i]); // Pass the correct ID map
+    }
+    return non_isomorphic_components.size();
 }
