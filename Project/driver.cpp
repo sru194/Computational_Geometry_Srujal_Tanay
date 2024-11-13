@@ -76,11 +76,48 @@ int main() {
     if (!edge_input(vertices, fileName, edges)) return -1;
 
     // Call the planarity check function
-    check_planarity(vertices, edges);
+    int planar = check_planarity(vertices, edges);
+    cout<<"The number of edges in the kuratowski subgraph is: "<<planar<<"\n\n";
+
+    string command = "dot -Tpng graph.dot -o graph.png "
+                     "-Gbgcolor=lightgray "
+                     "-Nstyle=filled -Nfillcolor=lightblue -Nfontcolor=darkblue -Nshape=circle "
+                     "-Ecolor=orange -Epenwidth=2 "
+                     "-Glabel=\"Graph\" -Glabelloc=top -Gfontsize=20";
+    if(system(command.c_str()) != 0){
+        cerr << "Error: Failed to generate PNG for graph " << endl;
+    } 
+    else{
+        cout << "Generated graph.png successfully." << endl;
+    }
+
+    if the graph isnt planar then simply exit from the program
+    if(planar > 0){  //this means the graph isnt planar
+        return 0;
+    }
 
     //Call the isomorphism components function
-    nonIsoConnectedComponents(vertices,edges);
+    int comp = nonIsoConnectedComponents(vertices,edges);
+    cout<<"the number of non-isomorphic connected components is: "<<comp<<"\n\n";
 
+    for (int i = 1; i <= comp; ++i) {
+        // Assume that each component generates a `.dot` file named `graph<i>.dot`
+        string dotFileName = "graph" + to_string(i) + ".dot";
+        string pngFileName = "graph" + to_string(i) + ".png";
+        string command = "dot -Tpng " + dotFileName + " -o " + pngFileName + " "
+                         "-Gbgcolor=lightgray "
+                         "-Nstyle=filled -Nfillcolor=lightblue -Nfontcolor=darkblue -Nshape=circle "
+                         "-Ecolor=orange -Epenwidth=2 "
+                         "-Glabel=\"Component " + to_string(i) + "\" -Glabelloc=top -Gfontsize=20";
+        int result = system(command.c_str());
+
+        // Check if the command executed successfully
+        if (result != 0) {
+            cerr << "Error: Failed to generate PNG for component " << i << endl;
+        } 
+        else {
+            cout << "Generated " << pngFileName << " successfully." << endl;
+        }
+    }
     return 0;
 }
-
