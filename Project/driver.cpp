@@ -91,7 +91,7 @@ int main() {
         cout << "Generated graph.png successfully." << endl;
     }
 
-    if the graph isnt planar then simply exit from the program
+    //if the graph isnt planar then simply exit from the program
     if(planar > 0){  //this means the graph isnt planar
         return 0;
     }
